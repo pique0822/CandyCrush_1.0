@@ -97,7 +97,7 @@
 }
 
 .btn-crushes:focus {
-  background-color: #5454FF;
+  background-color: blue;
   color: white;
   cursor:not-allowed;
   text-align: center;

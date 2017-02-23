@@ -1,7 +1,7 @@
 <!--
 CandyCrush
-Your Name:
-Collaborators:
+Your Name: Miguel Del Rio
+Collaborators: None
 -->
 <!DOCTYPE html>
 <html>
@@ -63,7 +63,7 @@ $.extend({
 
 // constants
 var DEFAULT_BOARD_SIZE = 8;
-var COLUMNS_TO_LETTERS = ['a','b','c','d','e','f','g','h'];
+var COLUMNS_TO_LETTERS = ['a','b','c','d','e','f','g','h'];//The indices of the chars will correspond to the rows
 
 // data model at global scope for easier debugging
 var board;
@@ -122,7 +122,7 @@ var newBoard = function()
 $(board).on('add', function(e, info)
 {
   // Your code here.
-  var yellow = Candy.colors[1];
+  var yellow = Candy.colors[1];//The only one where the white text color won't work
 
   var toRow = info.toRow;
   var toCol = info.toCol;
@@ -136,7 +136,7 @@ $(board).on('add', function(e, info)
   console.log("this " + fromRow + " " + fromCol);
   console.log("other " + toRow + " " + toCol);
 
-
+  //This is only to ensure the correct text color is given
   otherCell.removeClass();
 
   if(info.candy.color == yellow)
@@ -155,7 +155,7 @@ $(board).on('add', function(e, info)
 $(board).on('move', function(e, info)
 {
   // Your code here.
-  var yellow = Candy.colors[1];
+  var yellow = Candy.colors[1];//The only problematic color for white text
 
   var toRow = info.toRow;
   var toCol = info.toCol;
@@ -169,7 +169,7 @@ $(board).on('move', function(e, info)
   console.log("this " + fromRow + " " + fromCol);
   console.log("other " + toRow + " " + toCol);
 
-
+  //To ensure correct text color
   otherCell.removeClass();
 
   if(info.candy.color == yellow)
@@ -192,6 +192,7 @@ $(board).on('remove', function(e, info)
   var row = info.fromRow;
   var col = info.fromCol;
 
+  //this is the cell that the candy will move into
   var otherCell = $('#gameTable > tbody').find('tr:eq('+row+')').find('td:eq('+col+')');
 
   otherCell.removeClass();
@@ -215,7 +216,7 @@ $(document).on('click', "#newGame", function(evt)
   board.clear();
   //Now we can make a new board
   newBoard();
-  $('#cellMoving').focus();
+  $('#cellMoving').focus();//QUickly allows user to get back into game
 
 });
 
@@ -233,7 +234,7 @@ $(document).on('click', "#upKey", function(evt)
     var col = parseInt(candyLocation.charAt(1)) -1;//the board is 0 indexed
     console.log(row + ' ' + col);
     var rowUp = row-1;
-    if(row>=0 && col>=0)
+    if(row>=0 && col>=0)//This is to prevent invalid input going into the getCandy method
     {
       var thisCandy = board.getCandyAt(row,col);
 
@@ -242,7 +243,6 @@ $(document).on('click', "#upKey", function(evt)
         board.flipCandies(thisCandy,otherCandy);
         reset();
         $('#cellMoving').val('');
-        $('#cellMoving').focus();
         canCrush();
       }
     }
@@ -274,7 +274,6 @@ $(document).on('click', "#downKey", function(evt)
         board.flipCandies(thisCandy,otherCandy);
         reset();
         $('#cellMoving').val('');
-        $('#cellMoving').focus();
         canCrush();
       }
     }
@@ -305,7 +304,6 @@ $(document).on('click', "#leftKey", function(evt)
         board.flipCandies(thisCandy,otherCandy);
         reset();
         $('#cellMoving').val('');
-        $('#cellMoving').focus();
         canCrush();
       }
     }
@@ -335,7 +333,6 @@ $(document).on('click', "#rightKey", function(evt)
         board.flipCandies(thisCandy,otherCandy);
         reset();
         $('#cellMoving').val('');
-        $('#cellMoving').focus();
         canCrush();
       }
     }
@@ -343,6 +340,7 @@ $(document).on('click', "#rightKey", function(evt)
 
 });
 
+//Removes all enabled classes from the arrow keys
 var reset = function()
 {
 
@@ -364,7 +362,7 @@ $(document).on('keyup', function(evt) {
   // Your code here.
   var focusedElem = document.activeElement;
 
-  if(focusedElem.id == 'cellMoving')
+  if(focusedElem.id == 'cellMoving')//This is to make sure that the focus is on the textBox
   {
     var candyLocation = $('#cellMoving').val().toLowerCase();
     if(candyLocation.length == 2 &&
@@ -379,7 +377,7 @@ $(document).on('keyup', function(evt) {
       {
 
         var thisCandy = board.getCandyAt(row,col);
-
+        //This section decides what arrow keys will be enabled
         if(rules.isMoveTypeValid(thisCandy,'left'))
         {
           console.log('left enabled');
@@ -410,21 +408,23 @@ $(document).on('keyup', function(evt) {
       }
     }
     else{
-      reset();
+      reset();//This simply to ensure arrow keys are disabled if text is not being inputted to the textbox
     }
   }
 });
 
 var canCrush = function()
 {
-  if(rules.getCandyCrushes().length > 0)
+  if(rules.getCandyCrushes().length > 0)//this is only >0 iff there are crushes
   {
-    $("#crushOnce").removeAttr('disabled');
-    $("#cellMoving").attr('disabled','disabled');
+    $("#crushOnce").removeAttr('disabled');//Will enable the button
+    $('#crushOnce').focus();//Removes the focus from the textbox since the current focus is crushing
+    $("#cellMoving").attr('disabled','disabled');//Disables the ability to input
   }
   else {
-    $("#crushOnce").attr('disabled','disabled');
-    $("#cellMoving").removeAttr('disabled');
+    $("#crushOnce").attr('disabled','disabled');//if the length is 0 then no crushes can be made
+    $("#cellMoving").removeAttr('disabled');//reenables input
+    $('#cellMoving').focus();//returns the focus to the textbox for quick input
   }
 }
 
@@ -433,14 +433,11 @@ $(document).on('click', "#crushOnce", function(evt){
   var crushes = rules.getCandyCrushes();
   console.log(rules.getCandyCrushes());
   if(crushes.length > 0){
-  rules.removeCrushes([crushes[0]]);
-  //While the candies are gone the input must be disabled.
-  $('#cellMoving').attr('disabled','disabled');
-    setTimeout(function(){
-      rules.moveCandiesDown();
-      $('#cellMoving').removeAttr('disabled');
-      $('#cellMoving').focus();
-      canCrush();
+  rules.removeCrushes([crushes[0]]);//This will remove one crush at a time instead of all at once.
+    setTimeout(function(){//Waits for 500ms
+      rules.moveCandiesDown();//First moves down candies
+      canCrush();//Then it checks if an there are any more crushable candies
+
     },500);
   }
 });
