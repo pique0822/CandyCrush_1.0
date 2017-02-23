@@ -1,0 +1,526 @@
+<!--
+CandyCrush
+Your Name:
+Collaborators:
+-->
+<!DOCTYPE html>
+<html>
+<!--
+/* Copyright (c) 2017 MIT 6.813/6.831 course staff, all rights reserved.
+ * Redistribution of original or derived work requires permission of course staff.
+ */
+-->
+
+<head>
+<meta charset="utf-8">
+<title>CandyCrush</title>
+
+<!-- Load style sheets -->
+<link rel="stylesheet" href=
+  "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.css">
+
+<link rel="stylesheet" href="mainLayout.css">
+
+<!-- Use mobile-aware viewport -->
+<meta name="viewport" content=
+  "width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Load any supplemental Javascript libraries here -->
+<script src=
+  "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src=
+  "https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.2/seedrandom.js">
+</script>
+<script src="candy.js"></script>
+<script src="board.js"></script>
+<script src="rules.js"></script>
+
+<script>
+
+// By default, the first board loaded by your page will be the same
+// each time you load (which is accomplished by "seeding" the random
+// number generator. This makes testing (and grading!) easier!
+Math.seedrandom(0);
+
+
+// A short jQuery extension to read query parameters from the URL.
+$.extend({
+  getUrlVars: function() {
+    var vars = [], pair;
+    var pairs = window.location.search.substr(1).split('&');
+    for (var i = 0; i < pairs.length; i++) {
+      pair = pairs[i].split('=');
+      vars.push(pair[0]);
+      vars[pair[0]] = pair[1] &&
+          decodeURIComponent(pair[1].replace(/\+/g, ' '));
+    }
+    return vars;
+  },
+  getUrlVar: function(name) {
+    return $.getUrlVars()[name];
+  }
+});
+
+// constants
+var DEFAULT_BOARD_SIZE = 8;
+var COLUMNS_TO_LETTERS = ['a','b','c','d','e','f','g','h'];
+
+// data model at global scope for easier debugging
+var board;
+var rules;
+
+// initialize board
+if ($.getUrlVar('size') && $.getUrlVar('size') >= 3) {
+  board = new Board($.getUrlVar('size'));
+} else {
+  board = new Board(DEFAULT_BOARD_SIZE);
+}
+
+// load a rule
+rules = new Rules(board);
+
+// Final initialization entry point: the Javascript code inside this block
+// runs at the end of start-up when the page has finished loading.
+$(document).ready(function()
+{
+  // Your code here.
+    newBoard();
+
+});
+
+
+var newBoard = function()
+{
+  console.log('New Board');
+  rules.prepareNewGame();
+
+  for(i = 0; i<DEFAULT_BOARD_SIZE; i++)
+  {
+    var appending = "<tr>";
+    for(j = 0; j<DEFAULT_BOARD_SIZE; j++)
+    {
+      var curr_candy = board.getCandyAt(i,j);
+      var color = curr_candy.color;
+      console.log(curr_candy.color);
+      var yellow = Candy.colors[1];
+      if(color == yellow){
+        appending += "<td class='candy yellowCandy' bgcolor=" + color + ">"+COLUMNS_TO_LETTERS[i]+(j+1)+"</td>";
+      }
+      else {
+        appending += "<td class='candy otherCandy' bgcolor=" + color + ">"+COLUMNS_TO_LETTERS[i]+(j+1)+"</td>";
+      }
+
+    }
+    appending+= "</tr>";
+    $('#gameTable tbody:last-child').append(appending);
+  }
+}
+/* Event Handlers */
+// access the candy object with info.candy
+
+// add a candy to the board
+$(board).on('add', function(e, info)
+{
+  // Your code here.
+  var yellow = Candy.colors[1];
+
+  var toRow = info.toRow;
+  var toCol = info.toCol;
+  var fromRow = info.fromRow;
+  var fromCol = info.fromCol;
+
+
+  var otherCell = $('#gameTable > tbody').find('tr:eq('+toRow+')').find('td:eq('+toCol+')');
+  var otherColor = otherCell.attr('bgcolor');
+
+  console.log("this " + fromRow + " " + fromCol);
+  console.log("other " + toRow + " " + toCol);
+
+
+  otherCell.removeClass();
+
+  if(info.candy.color == yellow)
+  {
+    otherCell.addClass("candy yellowCandy");
+  }
+  else
+  {
+    otherCell.addClass("candy otherCandy");
+  }
+
+  otherCell.attr('bgcolor',info.candy.color);
+});
+
+// move a candy on the board
+$(board).on('move', function(e, info)
+{
+  // Your code here.
+  var yellow = Candy.colors[1];
+
+  var toRow = info.toRow;
+  var toCol = info.toCol;
+  var fromRow = info.fromRow;
+  var fromCol = info.fromCol;
+
+
+  var otherCell = $('#gameTable > tbody').find('tr:eq('+toRow+')').find('td:eq('+toCol+')');
+  var otherColor = otherCell.attr('bgcolor');
+
+  console.log("this " + fromRow + " " + fromCol);
+  console.log("other " + toRow + " " + toCol);
+
+
+  otherCell.removeClass();
+
+  if(info.candy.color == yellow)
+  {
+    otherCell.addClass("candy yellowCandy");
+  }
+  else
+  {
+    otherCell.addClass("candy otherCandy");
+  }
+
+  otherCell.attr('bgcolor',info.candy.color);
+});
+
+// remove a candy from the board
+$(board).on('remove', function(e, info)
+{
+  // Your code here.
+  var thisCandy = info.candy;
+  var row = info.fromRow;
+  var col = info.fromCol;
+
+  var otherCell = $('#gameTable > tbody').find('tr:eq('+row+')').find('td:eq('+col+')');
+
+  otherCell.removeClass();
+
+  otherCell.addClass('candy emptyCandy');
+  otherCell.attr('bgcolor','#FFFFFF');
+});
+
+// move a candy on the board
+$(board).on('scoreUpdate', function(e, info)
+{
+  // Your code here. To be implemented in pset 2.
+});
+
+// Button Events
+$(document).on('click', "#newGame", function(evt)
+{
+  // Your code here.
+  //First we have to clear the table
+  $('#gameTable').find('tr').remove();
+  board.clear();
+  //Now we can make a new board
+  newBoard();
+  $('#cellMoving').focus();
+
+});
+
+$(document).on('click', "#upKey", function(evt)
+{
+  // Your code here.
+  //First we have to find the text in the textBox
+  var candyLocation = $('#cellMoving').val().toLowerCase();
+  if(candyLocation.length == 2 &&
+    97 <= candyLocation.charCodeAt(0) && candyLocation.charCodeAt(0)<= 122 && // This checks that the first char is an alphabetic character
+    48<= candyLocation.charCodeAt(1) &&  candyLocation.charCodeAt(1)<= 57)// This checks that the second char is a numeric character
+  {
+    console.log('moving ' + candyLocation);
+    var row = COLUMNS_TO_LETTERS.indexOf(candyLocation.charAt(0).toLowerCase());
+    var col = parseInt(candyLocation.charAt(1)) -1;//the board is 0 indexed
+    console.log(row + ' ' + col);
+    var rowUp = row-1;
+    if(row>=0 && col>=0)
+    {
+      var thisCandy = board.getCandyAt(row,col);
+
+      if(rules.isMoveTypeValid(thisCandy,'up')){
+        var otherCandy = board.getCandyAt(rowUp,col);
+        board.flipCandies(thisCandy,otherCandy);
+        reset();
+        $('#cellMoving').val('');
+        $('#cellMoving').focus();
+        canCrush();
+      }
+    }
+  }
+
+});
+
+$(document).on('click', "#downKey", function(evt)
+{
+  // Your code here.
+  //First we have to find the text in the textBox
+  var candyLocation = $('#cellMoving').val().toLowerCase();
+  if(candyLocation.length == 2 &&
+    97 <= candyLocation.charCodeAt(0) && candyLocation.charCodeAt(0)<= 122 && // This checks that the first char is an alphabetic character
+    48<= candyLocation.charCodeAt(1) &&  candyLocation.charCodeAt(1)<= 57)// This checks that the second char is a numeric character
+  {
+    console.log('moving ' + candyLocation);
+    var row = COLUMNS_TO_LETTERS.indexOf(candyLocation.charAt(0).toLowerCase());
+    var col = parseInt(candyLocation.charAt(1)) -1;//the board is 0 indexed
+    console.log(row + ' ' + col);
+    var rowDown = row+1;
+    if(row>=0 && col>=0)
+    {
+      var thisCandy = board.getCandyAt(row,col);
+
+      if(rules.isMoveTypeValid(thisCandy,'down')){
+
+        var otherCandy = board.getCandyAt(rowDown,col);
+        board.flipCandies(thisCandy,otherCandy);
+        reset();
+        $('#cellMoving').val('');
+        $('#cellMoving').focus();
+        canCrush();
+      }
+    }
+  }
+
+});
+
+$(document).on('click', "#leftKey", function(evt)
+{
+  // Your code here.
+  //First we have to find the text in the textBox
+  var candyLocation = $('#cellMoving').val().toLowerCase();
+  if(candyLocation.length == 2 &&
+    97 <= candyLocation.charCodeAt(0) && candyLocation.charCodeAt(0)<= 122 && // This checks that the first char is an alphabetic character
+    48<= candyLocation.charCodeAt(1) &&  candyLocation.charCodeAt(1)<= 57)// This checks that the second char is a numeric character
+  {
+    console.log('moving ' + candyLocation);
+    var row = COLUMNS_TO_LETTERS.indexOf(candyLocation.charAt(0).toLowerCase());
+    var col = parseInt(candyLocation.charAt(1)) -1;//the board is 0 indexed
+    console.log(row + ' ' + col);
+    var colLeft = col-1;
+    if(row>=0 && col>=0)
+    {
+      var thisCandy = board.getCandyAt(row,col);
+
+      if(rules.isMoveTypeValid(thisCandy,'left')){
+        var otherCandy = board.getCandyAt(row,colLeft);
+        board.flipCandies(thisCandy,otherCandy);
+        reset();
+        $('#cellMoving').val('');
+        $('#cellMoving').focus();
+        canCrush();
+      }
+    }
+  }
+});
+
+$(document).on('click', "#rightKey", function(evt)
+{
+  // Your code here.
+  //First we have to find the text in the textBox
+  var candyLocation = $('#cellMoving').val().toLowerCase();
+  if(candyLocation.length == 2 &&
+    97 <= candyLocation.charCodeAt(0) && candyLocation.charCodeAt(0)<= 122 && // This checks that the first char is an alphabetic character
+    48<= candyLocation.charCodeAt(1) &&  candyLocation.charCodeAt(1)<= 57)// This checks that the second char is a numeric character
+  {
+    console.log('moving ' + candyLocation);
+    var row = COLUMNS_TO_LETTERS.indexOf(candyLocation.charAt(0).toLowerCase());
+    var col = parseInt(candyLocation.charAt(1)) -1;//the board is 0 indexed
+    console.log(row + ' ' + col);
+    var colRight = col+1;
+    if(row>=0 && col>=0)
+    {
+      var thisCandy = board.getCandyAt(row,col);
+
+      if(rules.isMoveTypeValid(thisCandy,'right')){
+        var otherCandy = board.getCandyAt(row,colRight);
+        board.flipCandies(thisCandy,otherCandy);
+        reset();
+        $('#cellMoving').val('');
+        $('#cellMoving').focus();
+        canCrush();
+      }
+    }
+  }
+
+});
+
+var reset = function()
+{
+
+  $('#leftKey').removeClass('arrow-enabled');
+  $('#leftKey').addClass('arrow-disabled');
+
+  $('#downKey').removeClass('arrow-enabled');
+  $('#downKey').addClass('arrow-disabled');
+
+  $('#upKey').removeClass('arrow-enabled');
+  $('#upKey').addClass('arrow-disabled');
+
+  $('#rightKey').removeClass('arrow-enabled');
+  $('#rightKey').addClass('arrow-disabled');
+}
+
+// keyboard events arrive here
+$(document).on('keyup', function(evt) {
+  // Your code here.
+  var focusedElem = document.activeElement;
+
+  if(focusedElem.id == 'cellMoving')
+  {
+    var candyLocation = $('#cellMoving').val().toLowerCase();
+    if(candyLocation.length == 2 &&
+      97 <= candyLocation.charCodeAt(0) && candyLocation.charCodeAt(0)<= 122 && // This checks that the first char is an alphabetic character
+      48<= candyLocation.charCodeAt(1) &&  candyLocation.charCodeAt(1)<= 57)// This checks that the second char is a numeric character
+    {
+
+      var row = COLUMNS_TO_LETTERS.indexOf(candyLocation.charAt(0).toLowerCase());
+      var col = parseInt(candyLocation.charAt(1)) -1;//the board is 0 indexed
+
+      if(row>=0 && col>=0)
+      {
+
+        var thisCandy = board.getCandyAt(row,col);
+
+        if(rules.isMoveTypeValid(thisCandy,'left'))
+        {
+          console.log('left enabled');
+          $('#leftKey').removeClass('arrow-disabled');
+          $('#leftKey').addClass('arrow-enabled');
+        }
+
+        if(rules.isMoveTypeValid(thisCandy,'up'))
+        {
+          console.log('up enabled');
+          $('#upKey').removeClass('arrow-disabled');
+          $('#upKey').addClass('arrow-enabled');
+        }
+
+        if(rules.isMoveTypeValid(thisCandy,'right'))
+        {
+          console.log('right enabled');
+          $('#rightKey').removeClass('arrow-disabled');
+          $('#rightKey').addClass('arrow-enabled');
+        }
+
+        if(rules.isMoveTypeValid(thisCandy,'down'))
+        {
+          console.log('down enabled');
+          $('#downKey').removeClass('arrow-disabled');
+          $('#downKey').addClass('arrow-enabled');
+        }
+      }
+    }
+    else{
+      reset();
+    }
+  }
+});
+
+var canCrush = function()
+{
+  if(rules.getCandyCrushes().length > 0)
+  {
+    $("#crushOnce").removeAttr('disabled');
+  }
+  else {
+    $("#crushOnce").attr('disabled','disabled');
+  }
+}
+
+$(document).on('click', "#crushOnce", function(evt){
+  console.log('removing crush');
+  var crushes = rules.getCandyCrushes();
+  console.log(rules.getCandyCrushes());
+  if(crushes.length > 0){
+  rules.removeCrushes([crushes[0]]);
+  //While the candies are gone the input must be disabled.
+  $('#cellMoving').attr('disabled','disabled');
+    setTimeout(function(){
+      rules.moveCandiesDown();
+      $('#cellMoving').removeAttr('disabled');
+      $('#cellMoving').focus();
+      canCrush();
+    },500);
+  }
+});
+
+
+</script>
+
+
+</head>
+
+<body>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-3 vertical-center" id="firstColumn">
+      <div>
+      <!-- Column 1 Code Here -->
+        <div class="col-sm-8 offset-sm-2">
+          <div class="row col-center">
+            <h1 class="title bold text-center">Candy Crush</h1>
+          </div>
+          <br>
+          <div class="row col-center">
+            <input id="newGame" type="button" class="btn btn-crushes form-control" value="New Game">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="col-md-6 vertical-center" id="mainColumn">
+
+      <!-- Column 2 Code Here -->
+      <div class="row col-center">
+        <table width=320 height=320 id="gameTable">
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="col-md-3 vertical-center" id="lastColumn">
+
+      <!-- Column 3 Code Here -->
+      <div class="col-sm-10 offset-sm-2">
+        <div class="row col-center">
+          <form class="form-inline">
+            <label><h2 class="bold">Move: </h2></label>
+            <input size=2 type="text" id="cellMoving"></input>
+          </form>
+        </div>
+        <br>
+        <div class="row col-center">
+          <table id="buttonTable" width=180 height=180>
+            <tbody>
+              <tr>
+                <td class="empty key"></td>
+                <td class="arrow-disabled key" id="upKey">&uarr;</td>
+                <td class="empty key"></td>
+              </tr>
+              <tr>
+                <td class="arrow-disabled key" id="leftKey">&larr;</td>
+                <td class="empty key"></td>
+                <td class="arrow-disabled key" id="rightKey">&rarr;</td>
+              </tr>
+              <tr>
+                <td class="empty key"></td>
+                <td class="arrow-disabled key" id="downKey">&darr;</td>
+                <td class="empty key"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <br>
+        <div class="row col-center">
+          <input id="crushOnce" type="button" class="btn btn-crushes form-control" disabled value="Crush Once">
+        </div>
+      </div>
+    </div>
+  </div> <!-- class="row" -->
+</div> <!-- class="container" -->
+
+</body>
+
+</html>
